@@ -36,3 +36,6 @@ fastlane/test_output/
 
 # Code coverage
 *.xccovreport
+
+# Firebase
+GoogleService-Info.plist
