@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BA7715732DF5CCE1002A7A30 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = BA7715722DF5CCE1002A7A30 /* FirebaseAuth */; };
+		BA7715752DF5CCE1002A7A30 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BA7715742DF5CCE1002A7A30 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		BAB0FE352DF45BD200BEA835 /* SnatchIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnatchIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA7715732DF5CCE1002A7A30 /* FirebaseAuth in Frameworks */,
+				BA7715752DF5CCE1002A7A30 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,8 @@
 			);
 			name = SnatchIt;
 			packageProductDependencies = (
+				BA7715722DF5CCE1002A7A30 /* FirebaseAuth */,
+				BA7715742DF5CCE1002A7A30 /* FirebaseFirestore */,
 			);
 			productName = SnatchIt;
 			productReference = BAB0FE352DF45BD200BEA835 /* SnatchIt.app */;
@@ -94,6 +103,9 @@
 			);
 			mainGroup = BAB0FE2C2DF45BD200BEA835;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BA7715712DF5CCE1002A7A30 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BAB0FE362DF45BD200BEA835 /* Products */;
 			projectDirPath = "";
@@ -324,6 +336,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BA7715712DF5CCE1002A7A30 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.14.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BA7715722DF5CCE1002A7A30 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA7715712DF5CCE1002A7A30 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		BA7715742DF5CCE1002A7A30 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA7715712DF5CCE1002A7A30 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BAB0FE2D2DF45BD200BEA835 /* Project object */;
 }
