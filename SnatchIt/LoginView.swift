@@ -55,9 +55,10 @@ struct LoginView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-            //    NavigationLink("Don't have an account? Sign up!", //destination: SignUpView(authService: authService))
-               //     .padding(.top)
+                NavigationLink("Don't have an account? Sign up!",destination: SignUpView(authService: authService))
+                   .padding(.top)
             }
+            .padding()
         }
     }
     
