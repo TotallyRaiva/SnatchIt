@@ -11,8 +11,8 @@ struct ContentView: View {
     @StateObject private var authService = AuthService()
 
     var body: some View {
-        if authService.user != nil {
-            DashboardView()
+        if let _ = authService.user {
+            DashboardView(authService: authService)
         } else {
             LoginView(authService: authService)
         }

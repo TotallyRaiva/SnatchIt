@@ -8,21 +8,43 @@ import SwiftUI
 
 
 struct DashboardView: View {
+    @StateObject private var firestoreService = FirestoreService()
+    @ObservedObject var authService: AuthService
+    
     var body: some View {
         VStack {
-            Text("🏠 Welcome to SnatchIt!")
+            Text("🏠 My Expenses")
                 .font(.largeTitle)
                 .bold()
                 .padding()
-
-            Text("Here’s where your expenses will show up.")
-                .foregroundColor(.gray)
-
-            Spacer()
+            
+            List(firestoreService.expenses) { expense in
+                VStack(alignment: .leading) {
+                    Text(expense.category)
+                        .font(.headline)
+                    Text(expense.comment ?? "")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    HStack {
+                        Text("$\(expense.amount, specifier: "%.2f")")
+                        Spacer()
+                        Text(expense.date, style: .date)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
+            }  
+                
+                Spacer()
+            }
+        .onAppear {
+            if let userId = authService.user?.uid {
+                firestoreService.fetchExpenses(forUser: userId)
         }
+        }
+        }
+        }
+    
+    #Preview {
+        DashboardView(authService: AuthService())
     }
-}
-
-#Preview {
-    DashboardView()
-}
