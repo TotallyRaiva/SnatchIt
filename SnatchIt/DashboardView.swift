@@ -6,18 +6,32 @@
 //
 import SwiftUI
 
-
 struct DashboardView: View {
     @StateObject private var firestoreService = FirestoreService()
     @ObservedObject var authService: AuthService
     
+    @State private var showingAddExpense = false
+
     var body: some View {
         VStack {
-            Text("🏠 My Expenses")
-                .font(.largeTitle)
-                .bold()
-                .padding()
-            
+            // Header with title and add button
+            HStack {
+                Text("🏠 My Expenses")
+                    .font(.largeTitle)
+                    .bold()
+                Spacer()
+                Button(action: {
+                    showingAddExpense = true
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title)
+                }
+                .accessibilityLabel("Add Expense")
+            }
+            .padding(.horizontal)
+            .padding(.top)
+
+            // Expense list
             List(firestoreService.expenses) { expense in
                 VStack(alignment: .leading) {
                     Text(expense.category)
@@ -33,18 +47,24 @@ struct DashboardView: View {
                             .foregroundColor(.gray)
                     }
                 }
-            }  
-                
-                Spacer()
             }
+
+            Spacer()
+        }
         .onAppear {
             if let userId = authService.user?.uid {
                 firestoreService.fetchExpenses(forUser: userId)
+            }
         }
+        .sheet(isPresented: $showingAddExpense) {
+            AddExpenseView(
+                firestoreService: firestoreService,
+                userId: authService.user?.uid ?? ""
+            )
         }
-        }
-        }
-    
-    #Preview {
-        DashboardView(authService: AuthService())
     }
+}
+
+#Preview {
+    DashboardView(authService: AuthService())
+}
