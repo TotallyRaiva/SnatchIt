@@ -36,4 +36,25 @@ class FirestoreService: ObservableObject {
                 } ?? []
             }
     }
+    func deleteExpense(_ expense: Expense, forUser userID: String) {
+        guard let docID = expense.id else { return }
+        db.collection("users")
+          .document(userID)
+          .collection("expenses")
+          .document(docID)
+          .delete()
+    }
+
+    func updateExpense(_ expense: Expense, forUser userID: String) {
+        guard let docID = expense.id else { return }
+        do {
+            try db.collection("users")
+                  .document(userID)
+                  .collection("expenses")
+                  .document(docID)
+                  .setData(from: expense, merge: true)
+        } catch {
+            print("Update failed: \(error)")
+        }
+    }
 }

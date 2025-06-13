@@ -5,17 +5,18 @@
 //  Created by Reiwa on 07.06.2025.
 //
 import Foundation
+import FirebaseFirestore   // required for @DocumentID
 
 // Single expense item
 struct Expense: Identifiable, Codable {
-    let id: UUID
+    @DocumentID var id: String?
+    
     var amount: Double
     var category: String
     var date: Date
     var comment: String?
     
     init(id: UUID = UUID(), amount: Double, category: String, date: Date, comment: String?) {
-        self.id = id
         self.amount = amount
         self.category = category
         self.date = date
