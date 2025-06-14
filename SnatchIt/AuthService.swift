@@ -32,7 +32,11 @@ class AuthService: ObservableObject{
         }
     }
     func signOut() {
-            try? Auth.auth().signOut()
+        do {
+            try Auth.auth().signOut()
             self.user = nil
+        } catch {
+            print("❌ Sign out failed:", error.localizedDescription)
+        }
     }
 }
