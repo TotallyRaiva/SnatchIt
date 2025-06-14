@@ -13,6 +13,7 @@ class AuthService: ObservableObject{
     func signUp(email: String, password: String, completion: @escaping (Result<Void, Error>) -> Void) {
         Auth.auth().createUser(withEmail: email, password: password) { result, error in
             if let error = error {
+                print("🔥 Firebase sign-up error:", error.localizedDescription)
                 completion(.failure(error))
             } else {
                 self.user = result?.user
