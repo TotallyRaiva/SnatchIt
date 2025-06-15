@@ -12,23 +12,35 @@ struct ExpenseFormView: View {
     @ObservedObject var firestoreService: FirestoreService
     var userId: String
     var existingExpense: Expense?
-
+    
+static let predefinedCategories = [
+    "🏁Quicky(Edit me)",
+    "🛒 Groceries",
+    "🚗 Transport",
+    "🍽️ Dining",
+    "🎮 Entertainment",
+    "🩺 Health",
+    "💡 Utilities",
+    "🏠 Rent",
+    "❓ Other"
+]
+    
     // Initialize state variables with existingExpense values if available
     @State private var amount: String
     @State private var category: String
     @State private var comment: String
     @State private var date: Date
-
+    
     init(firestoreService: FirestoreService, userId: String, existingExpense: Expense? = nil) {
         self.firestoreService = firestoreService
         self.userId = userId
         self.existingExpense = existingExpense
         _amount = State(initialValue: existingExpense.map { String($0.amount) } ?? "")
-        _category = State(initialValue: existingExpense?.category ?? "")
+        _category = State(initialValue: existingExpense?.category ?? "🏁Quicky(Edit me)")
         _comment = State(initialValue: existingExpense?.comment ?? "")
         _date = State(initialValue: existingExpense?.date ?? Date())
     }
-
+    
     var body: some View {
         NavigationView {
             Form {
@@ -37,7 +49,12 @@ struct ExpenseFormView: View {
                         .keyboardType(.decimalPad)
                 }
                 Section(header: Text("Category")) {
-                    TextField("e.g. Groceries, Rent", text: $category)
+                    Picker("Snatch type", selection: $category) {
+                        ForEach(Self.predefinedCategories, id: \.self) {
+                            Text($0)
+                        }
+                    }
+                    .pickerStyle(.menu)
                 }
                 Section(header: Text("Comment (Optional)")) {
                     TextField("What was it for?", text: $comment)
@@ -62,17 +79,17 @@ struct ExpenseFormView: View {
             }
         }
     }
-
+    
     // Handles both new and existing expense saves
     private func saveExpense() {
         guard let amountValue = Double(amount) else { return }
-
+        
         var expense = existingExpense ?? Expense(amount: amountValue, category: category, date: date, comment: comment.isEmpty ? nil : comment)
         expense.amount = amountValue
         expense.category = category
         expense.comment = comment.isEmpty ? nil : comment
         expense.date = date
-
+        
         if existingExpense == nil {
             firestoreService.addExpense(expense, forUser: userId)
         } else {
@@ -81,7 +98,6 @@ struct ExpenseFormView: View {
         dismiss()
     }
 }
-
 
 #Preview {
     ExpenseFormView(firestoreService: FirestoreService(), userId: "testUserId")
