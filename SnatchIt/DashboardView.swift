@@ -13,6 +13,9 @@ struct DashboardView: View {
     @State private var showingAddExpense = false
     @State private var editingExpense: Expense?    // nil when not editing
     
+    @State private var recentlyDeletedExpense: Expense? // UNDO
+    @State private var showUndoAlert = false
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -67,8 +70,11 @@ struct DashboardView: View {
                     }
                     .onDelete { indexSet in
                         guard let userID = authService.user?.uid else { return }
-                        indexSet.map { firestoreService.expenses[$0] }.forEach {
-                            firestoreService.deleteExpense($0, forUser: userID)
+                        if let index = indexSet.first {
+                            let expense = firestoreService.expenses[index]
+                            recentlyDeletedExpense = expense
+                            firestoreService.deleteExpense(expense, forUser: userID)
+                            showUndoAlert = true
                         }
                     }
                 }
@@ -93,10 +99,16 @@ struct DashboardView: View {
                     existingExpense: expense
                 )
             }
-            .sheet(item: $editingExpense) { exp in
-                ExpenseFormView(firestoreService: firestoreService,
-                                userId: authService.user?.uid ?? "",
-                                existingExpense: exp)
+            .alert("Expense Deleted", isPresented: $showUndoAlert) {
+                Button("Undo", role: .cancel) {
+                    if let expense = recentlyDeletedExpense {
+                        firestoreService.addExpense(expense, forUser: authService.user?.uid ?? "")
+                        recentlyDeletedExpense = nil
+                    }
+                }
+                Button("OK", role: .destructive) { }
+            } message: {
+                Text("You can undo this action.")
             }
             .toolbar {
                 ToolbarItem(placement: .bottomBar) {
