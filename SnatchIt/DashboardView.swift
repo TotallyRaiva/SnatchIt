@@ -49,6 +49,16 @@ struct DashboardView: View {
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
+                            .padding(.vertical, 4)
+                            HStack {
+                                Text("Tap to edit")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Image(systemName: "trash")
+                                    .font(.caption)
+                                    .foregroundColor(.gray.opacity(0.4))
+                            }
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
