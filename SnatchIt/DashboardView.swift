@@ -111,7 +111,11 @@ struct DashboardView: View {
                 Text("You can undo this action.")
             }
             .toolbar {
-                ToolbarItem(placement: .bottomBar) {
+                ToolbarItemGroup(placement: .bottomBar) {
+                    NavigationLink("📊 View Chart") {
+                        SpendingChartView(expenses: firestoreService.expenses)
+                    }
+                    Spacer()
                     Button("Logout") {
                         authService.signOut()
                     }
