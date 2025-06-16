@@ -33,77 +33,67 @@ struct DashboardView: View {
     }
     var body: some View {
         NavigationView {
-            VStack {
-                // Header with title and add button
-                HStack {
-                    Text("🏠 My Expenses")
-                        .font(.largeTitle)
-                        .bold()
-                    Spacer()
-                    Button(action: {
-                        showingAddExpense = true
-                    }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Header with title
+                    HStack {
+                        Text("🏠 My Expenses")
+                            .font(.largeTitle)
+                            .bold()
+                        Spacer()
                     }
-                    .accessibilityLabel("Add Expense")
-                }
-                .padding(.horizontal)
-                .padding(.top)
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("💰 Today's Total: $\(todayTotal, specifier: "%.2f")")
-                        .font(.headline)
-                    Text("📆 This Month: $\(monthTotal, specifier: "%.2f")")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal)
-                .padding(.top, 4)
-                // Expense list
-                List {
-                    ForEach(firestoreService.expenses) { expense in
-                        VStack(alignment: .leading) {
-                            Text(expense.category)
-                                .font(.headline)
-                            Text(expense.comment ?? "")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                            HStack {
-                                Text("$\(expense.amount, specifier: "%.2f")")
-                                Spacer()
-                                Text(expense.date, style: .date)
-                                    .font(.caption)
+                    .padding(.horizontal)
+                    .padding(.top)
+
+                    // Totals
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("💰 Today's Total: $\(todayTotal, specifier: "%.2f")")
+                            .font(.headline)
+                        Text("📆 This Month: $\(monthTotal, specifier: "%.2f")")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal)
+
+                    // Expense Cards
+                    LazyVStack(spacing: 12) {
+                        ForEach(firestoreService.expenses) { expense in
+                            VStack(alignment: .leading) {
+                                Text(expense.category)
+                                    .font(.headline)
+                                Text(expense.comment ?? "")
+                                    .font(.subheadline)
                                     .foregroundColor(.gray)
+                                HStack {
+                                    Text("$\(expense.amount, specifier: "%.2f")")
+                                    Spacer()
+                                    Text(expense.date, style: .date)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.vertical, 4)
+                                HStack {
+                                    Text("Tap to edit")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Image(systemName: "trash")
+                                        .font(.caption)
+                                        .foregroundColor(.gray.opacity(0.4))
+                                }
                             }
-                            .padding(.vertical, 4)
-                            HStack {
-                                Text("Tap to edit")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Image(systemName: "trash")
-                                    .font(.caption)
-                                    .foregroundColor(.gray.opacity(0.4))
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                editingExpense = expense
                             }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            editingExpense = expense
                         }
                     }
-                    .onDelete { indexSet in
-                        guard let userID = authService.user?.uid else { return }
-                        if let index = indexSet.first {
-                            let expense = firestoreService.expenses[index]
-                            recentlyDeletedExpense = expense
-                            firestoreService.deleteExpense(expense, forUser: userID)
-                            showUndoAlert = true
-                        }
-                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 32) // for spacing above tab bar
                 }
-                
-                Spacer()
             }
             .onAppear {
                 if let userId = authService.user?.uid {

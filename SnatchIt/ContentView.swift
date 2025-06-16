@@ -12,7 +12,7 @@ struct ContentView: View {
 
     var body: some View {
         if let _ = authService.user {
-            DashboardView(authService: authService)
+            MainTabView(authService: authService)
         } else {
             LoginView(authService: authService)
         }
