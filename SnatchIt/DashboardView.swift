@@ -16,6 +16,21 @@ struct DashboardView: View {
     @State private var recentlyDeletedExpense: Expense? // UNDO
     @State private var showUndoAlert = false
     
+    private var todayTotal: Double {
+        firestoreService.expenses
+            .filter { Calendar.current.isDateInToday($0.date) }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    private var monthTotal: Double {
+        let now = Date()
+        let calendar = Calendar.current
+        return firestoreService.expenses
+            .filter {
+                calendar.isDate($0.date, equalTo: now, toGranularity: .month)
+            }
+            .reduce(0) { $0 + $1.amount }
+    }
     var body: some View {
         NavigationView {
             VStack {
@@ -36,6 +51,15 @@ struct DashboardView: View {
                 .padding(.horizontal)
                 .padding(.top)
                 
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("💰 Today's Total: $\(todayTotal, specifier: "%.2f")")
+                        .font(.headline)
+                    Text("📆 This Month: $\(monthTotal, specifier: "%.2f")")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                .padding(.top, 4)
                 // Expense list
                 List {
                     ForEach(firestoreService.expenses) { expense in

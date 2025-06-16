@@ -28,13 +28,15 @@ struct SpendingChartView: View {
                         x: .value("Category", category),
                         y: .value("Total", total)
                     )
+                    .annotation(position: .top) {
+                        Text("$\(total, specifier: "%.0f")")
+                            .font(.caption)
+                    }
                 }
             }
-            .frame(height: 280)
-            .padding()
+                }
+            }
         }
-    }
-}
 
 struct SpendingChartView_Previews: PreviewProvider {
     static var previews: some View {
