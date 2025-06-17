@@ -31,9 +31,11 @@ struct SpendingChartView: View {
                     .annotation(position: .top) {
                         Text("$\(total, specifier: "%.0f")")
                             .font(.caption)
+        
                     }
                 }
             }
+            .padding(.bottom, 100)
                 }
             }
         }

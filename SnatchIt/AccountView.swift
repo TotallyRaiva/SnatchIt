@@ -32,7 +32,7 @@ struct AccountView: View {
                 } label: {
                     Label("Logout", systemImage: "arrow.right.circle")
                 }
-                .padding()
+                .padding(.bottom, 100)
             }
             .padding()
             .navigationTitle("Account")
