@@ -9,19 +9,20 @@ import Charts
 
 struct MainTabView: View {
     @ObservedObject var authService: AuthService
+    @StateObject private var firestoreService = FirestoreService()
     @State private var selectedTab = 0
     @State private var showAddExpense = false
 
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
-                DashboardView(authService: authService)
+                DashboardView(authService: authService, firestoreService: firestoreService)
                     .tag(0)
                     .tabItem {
                         Label("Dashboard", systemImage: "house")
                     }
 
-                SpendingChartView(expenses: []) // Replace with real data
+                SpendingChartView(expenses: firestoreService.expenses)
                     .tag(1)
                     .tabItem {
                         Label("Charts", systemImage: "chart.bar")
@@ -64,7 +65,7 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $showAddExpense) {
             ExpenseFormView(
-                firestoreService: FirestoreService(),
+                firestoreService: firestoreService,
                 userId: authService.user?.uid ?? ""
             )
         }

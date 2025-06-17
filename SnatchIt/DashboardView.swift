@@ -7,8 +7,8 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @StateObject private var firestoreService = FirestoreService()
     @ObservedObject var authService: AuthService
+    @ObservedObject var firestoreService: FirestoreService
     
     @State private var showingAddExpense = false
     @State private var editingExpense: Expense?    // nil when not editing
@@ -124,20 +124,9 @@ struct DashboardView: View {
             } message: {
                 Text("You can undo this action.")
             }
-            .toolbar {
-                ToolbarItemGroup(placement: .bottomBar) {
-                    NavigationLink("📊 View Chart") {
-                        SpendingChartView(expenses: firestoreService.expenses)
-                    }
-                    Spacer()
-                    Button("Logout") {
-                        authService.signOut()
-                    }
-                }
-            }
         }
     }
 }
     #Preview {
-        DashboardView(authService: AuthService())
+        DashboardView(authService: AuthService(), firestoreService: FirestoreService())
     }
