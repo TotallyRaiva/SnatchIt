@@ -5,10 +5,13 @@
 //  Created by Reiwa on 09.06.2025.
 //
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct SignUpView: View {
     @State private var email = ""
     @State private var password = ""
+    @State private var nickname = ""
     @ObservedObject var authService: AuthService
     
     @State private var errorMessage: String?
@@ -19,6 +22,12 @@ struct SignUpView: View {
             Text("📝 Sign Up for SnatchIt")
                 .font(.largeTitle)
                 .bold()
+            
+            TextField("Enter nickname", text: $nickname)
+                .autocapitalization(.words)
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
             
             TextField("Email", text: $email)
                 .keyboardType(.emailAddress)
@@ -42,7 +51,20 @@ struct SignUpView: View {
                 authService.signUp(email: email, password: password) { result in
                     switch result {
                         case .success(()):
-                            print("Sign-up successful")
+                            // Save nickname & email to Firestore
+                            if let user = Auth.auth().currentUser {
+                                let db = Firestore.firestore()
+                                db.collection("users").document(user.uid).setData([
+                                    "email": email,
+                                    "nickname": nickname
+                                ]) { error in
+                                    if let error = error {
+                                        print("Error saving user data: \(error.localizedDescription)")
+                                    } else {
+                                        print("User profile saved in Firestore!")
+                                    }
+                                }
+                            }
                         case .failure(let error):
                             self.errorMessage = error.localizedDescription
                     }
