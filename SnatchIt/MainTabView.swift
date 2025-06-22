@@ -9,29 +9,29 @@ import Charts
 
 struct MainTabView: View {
     @ObservedObject var authService: AuthService
-    @StateObject private var firestoreService = FirestoreService()
+    @EnvironmentObject var firestoreService: FirestoreService
     @State private var selectedTab = 0
     @State private var showAddExpense = false
 
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
-                DashboardView(authService: authService, firestoreService: firestoreService)
+                DashboardView(authService: authService)
                     .tag(0)
                     .tabItem {
                         Label("Dashboard", systemImage: "house")
                     }
 
-                SpendingChartView(expenses: firestoreService.expenses)
+                SpendingChartView()
                     .tag(1)
                     .tabItem {
                         Label("Charts", systemImage: "chart.bar")
                     }
 
-                Text("History") // Placeholder
+                GangsView()
                     .tag(2)
                     .tabItem {
-                        Label("History", systemImage: "clock")
+                        Label("Gangs", systemImage: "person.3.sequence.fill")
                     }
 
                 AccountView(authService: authService)
@@ -65,13 +65,18 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $showAddExpense) {
             ExpenseFormView(
-                firestoreService: firestoreService,
-                userId: authService.user?.uid ?? ""
+                userId: authService.user?.id ?? ""
             )
+        }
+        .onChange(of: showAddExpense) {
+            if showAddExpense {
+                print("Sheet presenting. userId: \(authService.user?.id ?? "nil")")
+            }
         }
     }
 }
 
 #Preview {
     MainTabView(authService: AuthService())
+        .environmentObject(FirestoreService())
 }

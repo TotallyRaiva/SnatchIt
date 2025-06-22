@@ -13,6 +13,8 @@ class FirestoreService: ObservableObject {
     @Published var expenses: [Expense] = []
 
     func addExpense(_ expense: Expense, forUser userID: String) {
+        print("Adding expense for userID:", userID)
+        print("Expense to add:", expense)
         do {
             let _ = try db.collection("users").document(userID)
                 .collection("expenses").addDocument(from: expense)

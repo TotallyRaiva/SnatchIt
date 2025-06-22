@@ -9,10 +9,12 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var authService = AuthService()
+    @StateObject private var firestoreService = FirestoreService()
 
     var body: some View {
         if let _ = authService.user {
             MainTabView(authService: authService)
+                .environmentObject(firestoreService)
         } else {
             LoginView(authService: authService)
         }

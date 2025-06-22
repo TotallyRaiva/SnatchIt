@@ -9,7 +9,7 @@ import SwiftUI
 struct ExpenseFormView: View {
     @Environment(\.dismiss) var dismiss
     
-    @ObservedObject var firestoreService: FirestoreService
+    @EnvironmentObject var firestoreService: FirestoreService
     var userId: String
     var existingExpense: Expense?
     
@@ -31,8 +31,7 @@ static let predefinedCategories = [
     @State private var comment: String
     @State private var date: Date
     
-    init(firestoreService: FirestoreService, userId: String, existingExpense: Expense? = nil) {
-        self.firestoreService = firestoreService
+    init(userId: String, existingExpense: Expense? = nil) {
         self.userId = userId
         self.existingExpense = existingExpense
         _amount = State(initialValue: existingExpense.map { String($0.amount) } ?? "")
@@ -82,13 +81,35 @@ static let predefinedCategories = [
     
     // Handles both new and existing expense saves
     private func saveExpense() {
-        guard let amountValue = Double(amount) else { return }
+        // Check that userId is not empty
+        guard !userId.isEmpty else {
+            print("User ID is empty, cannot save expense.")
+            return
+        }
         
-        var expense = existingExpense ?? Expense(amount: amountValue, category: category, date: date, comment: comment.isEmpty ? nil : comment)
-        expense.amount = amountValue
-        expense.category = category
-        expense.comment = comment.isEmpty ? nil : comment
-        expense.date = date
+        // Convert amount string to Double, print if fails
+        guard let amountValue = Double(amount) else {
+            print("Invalid amount entered: \(amount)")
+            return
+        }
+        
+        // Create or update expense object
+        var expense: Expense
+        if let existing = existingExpense {
+            // Editing existing expense: update fields
+            expense = existing
+            expense.amount = amountValue
+            expense.category = category
+            expense.comment = comment.isEmpty ? nil : comment
+            expense.date = date
+        } else {
+            // Creating new expense
+            expense = Expense(amount: amountValue, category: category, date: date, comment: comment.isEmpty ? nil : comment, userId: userId, groupId: nil)
+        }
+        
+        // Print userId and expense before saving
+        print("Saving expense for userId: \(userId)")
+        print("Expense details: \(expense)")
         
         if existingExpense == nil {
             firestoreService.addExpense(expense, forUser: userId)
@@ -100,5 +121,6 @@ static let predefinedCategories = [
 }
 
 #Preview {
-    ExpenseFormView(firestoreService: FirestoreService(), userId: "testUserId")
+    ExpenseFormView(userId: "testUserId")
+        .environmentObject(FirestoreService())
 }

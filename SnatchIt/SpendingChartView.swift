@@ -8,10 +8,10 @@ import SwiftUI
 import Charts
 
 struct SpendingChartView: View {
-    let expenses: [Expense]
+    @EnvironmentObject var firestoreService: FirestoreService
 
     var body: some View {
-        let grouped = Dictionary(grouping: expenses, by: { $0.category })
+        let grouped = Dictionary(grouping: firestoreService.expenses, by: { $0.category })
         let chartData = grouped.map { category, items in
             (category, items.reduce(0) { $0 + $1.amount })
         }
@@ -40,8 +40,7 @@ struct SpendingChartView: View {
             }
         }
 
-struct SpendingChartView_Previews: PreviewProvider {
-    static var previews: some View {
-        SpendingChartView(expenses: [])
-    }
+#Preview {
+    SpendingChartView()
+        .environmentObject(FirestoreService())
 }

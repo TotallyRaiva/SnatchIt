@@ -8,7 +8,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @ObservedObject var authService: AuthService
-    @ObservedObject var firestoreService: FirestoreService
+    @EnvironmentObject var firestoreService: FirestoreService
     
     @State private var showingAddExpense = false
     @State private var editingExpense: Expense?    // nil when not editing
@@ -96,27 +96,25 @@ struct DashboardView: View {
                 }
             }
             .onAppear {
-                if let userId = authService.user?.uid {
+                if let userId = authService.user?.id {
                     firestoreService.fetchExpenses(forUser: userId)
                 }
             }
             .sheet(isPresented: $showingAddExpense) {
                 ExpenseFormView(
-                    firestoreService: firestoreService,
-                    userId: authService.user?.uid ?? ""
+                    userId: authService.user?.id ?? ""
                 )
             }
             .sheet(item: $editingExpense) { expense in
                 ExpenseFormView(
-                    firestoreService: firestoreService,
-                    userId: authService.user?.uid ?? "",
+                    userId: authService.user?.id ?? "",
                     existingExpense: expense
                 )
             }
             .alert("Expense Deleted", isPresented: $showUndoAlert) {
                 Button("Undo", role: .cancel) {
                     if let expense = recentlyDeletedExpense {
-                        firestoreService.addExpense(expense, forUser: authService.user?.uid ?? "")
+                        firestoreService.addExpense(expense, forUser: authService.user?.id ?? "")
                         recentlyDeletedExpense = nil
                     }
                 }
@@ -128,5 +126,6 @@ struct DashboardView: View {
     }
 }
     #Preview {
-        DashboardView(authService: AuthService(), firestoreService: FirestoreService())
+        DashboardView(authService: AuthService())
+            .environmentObject(FirestoreService())
     }
