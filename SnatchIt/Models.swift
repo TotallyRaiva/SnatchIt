@@ -49,17 +49,18 @@ struct User: Identifiable, Codable {
     }
 }
 
-// MARK: - SharedGroup Model
-// Represents a shared budget group (e.g. for roommates or families).
-// Holds group info and membership/admin lists.
+// MARK: - SharedGroup (Gang) Model
+// Represents a gang in SnatchIt (shared budget group).
+// Holds the gang's info and membership/Boss lists.
+// Only UIDs are stored for members and Bosses (admins).
+// Nicknames and avatars should be fetched dynamically from the users collection using UIDs in the view/viewmodel.
 struct SharedGroup: Identifiable, Codable {
     @DocumentID var id: String?         // Unique Firestore document ID
-    var name: String                    // Group display name
-    var members: [String]               // UIDs of all members in the group
-    var admins: [String]                // UIDs of group admins/owners
+    var name: String                    // Gang display name
+    var members: [String]               // UIDs of all gang members
+    var bosses: [String]                // UIDs of gang Bosses (admins/owners)
     var inviteCode: String?             // Optional: code for easy joining
-    var createdAt: Date                 // Timestamp of group creation
-    var avatar: String?                 // Optional group icon or emoji
+    var createdAt: Date                 // Timestamp of gang creation
 
     // MARK: - Helper Methods (stubs to be implemented in ViewModel/Service)
     // Use these in a ViewModel/Service to connect to Firestore.
@@ -75,4 +76,3 @@ struct SharedGroup: Identifiable, Codable {
         // Implementation will remove user from group's members array in Firestore
     }
 }
-
