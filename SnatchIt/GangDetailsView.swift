@@ -21,6 +21,7 @@ struct GangDetailsView: View {
     
     @State private var crew: [CrewMemberProfile] = [] // State array for crew profiles
     @State private var bossProfile: CrewMemberProfile? = nil // State for boss profile
+    @State private var showRecruitSheet = false
     
     var body: some View {
         NavigationView {
@@ -67,7 +68,9 @@ struct GangDetailsView: View {
                 }
                 if isBoss {
                     Section {
-                        Button("Recruit Crew") { /* Invite flow */ }
+                        Button("Recruit Crew") {
+                            showRecruitSheet = true
+                        }
                         Button("Kick from Gang") { /* Kick flow */ }
                         Button("Rename Gang") { /* Edit flow */ }
                         Button("Bust Up Gang") { /* Delete gang */ }
@@ -82,6 +85,12 @@ struct GangDetailsView: View {
                 }
             }
             .navigationTitle("Gang: \(gang.name)")
+            .sheet(isPresented: $showRecruitSheet) {
+                RecruitCrewView { invitee in
+                    print("Invited: \(invitee)")
+                    showRecruitSheet = false
+                }
+            }
             .onAppear {
                 let db = Firestore.firestore()
                 var fetchedCrew: [CrewMemberProfile] = []
@@ -127,6 +136,7 @@ struct GangDetailsView: View {
         }
     }
 }
+
 #Preview {
     GangDetailsView(
         gang: SharedGroup(
