@@ -51,15 +51,18 @@ struct User: Identifiable, Codable {
 
 // MARK: - SharedGroup (Gang) Model
 // Represents a gang in SnatchIt (shared budget group).
-// Holds the gang's info and membership/Boss lists.
-// Only UIDs are stored for members and Bosses (admins).
+// Holds the gang's info including optional description and avatar, membership, Boss lists, and pending invites.
+// Only UIDs are stored for members, Bosses (admins), and pendingInvites.
 // Nicknames and avatars should be fetched dynamically from the users collection using UIDs in the view/viewmodel.
 struct SharedGroup: Identifiable, Codable {
     @DocumentID var id: String?         // Unique Firestore document ID
     var name: String                    // Gang display name
+    var description: String?            // Optional gang description
+    var avatar: String?                 // Optional avatar/icon
     var members: [String]               // UIDs of all gang members
     var bosses: [String]                // UIDs of gang Bosses (admins/owners)
     var inviteCode: String?             // Optional: code for easy joining
+    var pendingInvites: [String]?       // Optional pending invites
     var createdAt: Date                 // Timestamp of gang creation
 
     // MARK: - Helper Methods (stubs to be implemented in ViewModel/Service)
