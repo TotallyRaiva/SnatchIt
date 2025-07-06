@@ -20,29 +20,41 @@ class GangDetailsViewModel: ObservableObject {
     /// Invite a user by email or UID. Handles Firestore update.
     func recruitCrew(invitee: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
-        // First, determine if input is UID or email
+        
+        // Determine if input is email or UID
         if invitee.contains("@") {
-            // Lookup by email
+            // Lookup user by email
             db.collection("users").whereField("email", isEqualTo: invitee).getDocuments { snapshot, error in
-                if let uid = snapshot?.documents.first?.documentID {
-                    self.sendGangInvite(uid: uid, completion: completion)
-                } else {
+                if let error = error {
+                    DispatchQueue.main.async {
+                        self.errorMessage = "Error finding user: \(error.localizedDescription)"
+                        completion(false)
+                    }
+                    return
+                }
+                
+                guard let uid = snapshot?.documents.first?.documentID else {
                     DispatchQueue.main.async {
                         self.errorMessage = "User with that email not found."
                         completion(false)
                     }
+                    return
                 }
+                
+                self.sendGangInvite(uid: uid, completion: completion)
             }
         } else {
-            // Treat as UID
+            // Treat input as UID
             self.sendGangInvite(uid: invitee, completion: completion)
         }
     }
 
-    /// Adds the user UID to pendingInvites array of the group.
+    /// Adds the user UID to pendingInvites array of the group and gangInvites in the user doc.
     private func sendGangInvite(uid: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
-        let groupRef = db.collection("groups").document(gang.id ?? "")
+        let groupId = gang.id ?? ""
+        
+        let groupRef = db.collection("groups").document(groupId)
         groupRef.updateData([
             "pendingInvites": FieldValue.arrayUnion([uid])
         ]) { error in
@@ -56,10 +68,72 @@ class GangDetailsViewModel: ObservableObject {
                 }
             }
         }
-        // Optionally, update user doc for quick lookup:
+        
+        // Add gang ID to user's invite list
         let userRef = db.collection("users").document(uid)
         userRef.updateData([
-            "gangInvites": FieldValue.arrayUnion([gang.id ?? ""])
-        ])
+            "gangInvites": FieldValue.arrayUnion([groupId])
+        ]) { error in
+            if let error = error {
+                print("Warning: Could not update user invite list: \(error.localizedDescription)")
+            }
+        }
     }
 }
+
+    /// Accept a pending invite for a user
+    func acceptInvite(forUserId userId: String, completion: @escaping (Bool) -> Void) {
+        let db = Firestore.firestore()
+        let groupRef = db.collection("groups").document(gang.id ?? "")
+        let userRef = db.collection("users").document(userId)
+
+        let batch = db.batch()
+        batch.updateData([
+            "members": FieldValue.arrayUnion([userId]),
+            "pendingInvites": FieldValue.arrayRemove([userId])
+        ], forDocument: groupRef)
+
+        batch.updateData([
+            "gangInvites": FieldValue.arrayRemove([gang.id ?? ""])
+        ], forDocument: userRef)
+
+        batch.commit { error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.errorMessage = "Failed to accept invite: \(error.localizedDescription)"
+                    completion(false)
+                } else {
+                    self.successMessage = "Joined the gang!"
+                    completion(true)
+                }
+            }
+        }
+    }
+
+    /// Decline a pending invite for a user
+    func declineInvite(forUserId userId: String, completion: @escaping (Bool) -> Void) {
+        let db = Firestore.firestore()
+        let groupRef = db.collection("groups").document(gang.id ?? "")
+        let userRef = db.collection("users").document(userId)
+
+        let batch = db.batch()
+        batch.updateData([
+            "pendingInvites": FieldValue.arrayRemove([userId])
+        ], forDocument: groupRef)
+
+        batch.updateData([
+            "gangInvites": FieldValue.arrayRemove([gang.id ?? ""])
+        ], forDocument: userRef)
+
+        batch.commit { error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.errorMessage = "Failed to decline invite: \(error.localizedDescription)"
+                    completion(false)
+                } else {
+                    self.successMessage = "Declined the invite."
+                    completion(true)
+                }
+            }
+        }
+    }
