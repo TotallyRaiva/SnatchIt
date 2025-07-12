@@ -10,6 +10,7 @@ import FirebaseFirestore
 class GangDetailsViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var successMessage: String? = nil
+    @Published var inviteInput: String = ""
 
     let gang: SharedGroup
 
@@ -79,12 +80,12 @@ class GangDetailsViewModel: ObservableObject {
             }
         }
     }
-}
 
     /// Accept a pending invite for a user
     func acceptInvite(forUserId userId: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
-        let groupRef = db.collection("groups").document(gang.id ?? "")
+        let groupId = gang.id ?? ""
+        let groupRef = db.collection("groups").document(groupId)
         let userRef = db.collection("users").document(userId)
 
         let batch = db.batch()
@@ -94,7 +95,7 @@ class GangDetailsViewModel: ObservableObject {
         ], forDocument: groupRef)
 
         batch.updateData([
-            "gangInvites": FieldValue.arrayRemove([gang.id ?? ""])
+            "gangInvites": FieldValue.arrayRemove([groupId])
         ], forDocument: userRef)
 
         batch.commit { error in
@@ -113,7 +114,8 @@ class GangDetailsViewModel: ObservableObject {
     /// Decline a pending invite for a user
     func declineInvite(forUserId userId: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
-        let groupRef = db.collection("groups").document(gang.id ?? "")
+        let groupId = gang.id ?? ""
+        let groupRef = db.collection("groups").document(groupId)
         let userRef = db.collection("users").document(userId)
 
         let batch = db.batch()
@@ -122,7 +124,7 @@ class GangDetailsViewModel: ObservableObject {
         ], forDocument: groupRef)
 
         batch.updateData([
-            "gangInvites": FieldValue.arrayRemove([gang.id ?? ""])
+            "gangInvites": FieldValue.arrayRemove([groupId])
         ], forDocument: userRef)
 
         batch.commit { error in
@@ -137,3 +139,4 @@ class GangDetailsViewModel: ObservableObject {
             }
         }
     }
+}

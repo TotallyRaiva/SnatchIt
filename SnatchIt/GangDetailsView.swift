@@ -87,9 +87,21 @@ struct GangDetailsView: View {
                 // Section with management actions available only to the boss
                 if isBoss {
                     Section {
-                        Button("Recruit Crew") {
-                            showRecruitSheet = true
+                        VStack(alignment: .leading) {
+                            Text("Invite by Email or UID").font(.caption)
+                            TextField("example@email.com or UID", text: Binding(
+                                get: { viewModel.inviteInput },
+                                set: { viewModel.inviteInput = $0 }
+                            ))
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            Button("Send Invite") {
+                                viewModel.recruitCrew(invitee: viewModel.inviteInput) { success in
+                                    viewModel.inviteInput = ""
+                                }
+                            }
                         }
+                        .padding(.vertical, 4)
+
                         Button("Kick from Gang") { /* Kick flow */ }
                         Button("Rename Gang") { /* Edit flow */ }
                         Button("Bust Up Gang") { /* Delete gang */ }
@@ -106,14 +118,6 @@ struct GangDetailsView: View {
                 }
             }
             .navigationTitle("Gang: \(gang.name)")
-            // Sheet for recruiting new crew members
-            .sheet(isPresented: $showRecruitSheet) {
-                RecruitCrewView { invitee in
-                    viewModel.recruitCrew(invitee: invitee) { success in
-                        showRecruitSheet = false
-                    }
-                }
-            }
             // Alert to show error or success messages from ViewModel
             .alert(isPresented: Binding<Bool>(
                 get: {
