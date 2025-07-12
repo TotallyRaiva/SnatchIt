@@ -67,7 +67,22 @@ struct GangDetailsView: View {
                                 Image(systemName: member.avatar ?? "person.fill")
                                 Text(member.nickname)
                                 if member.isBoss {
-                                    Text("Boss").font(.caption).foregroundColor(.accentColor)
+                                    Text("Boss")
+                                        .font(.caption)
+                                        .foregroundColor(.accentColor)
+                                } else if isBoss {
+                                    Spacer()
+                                    Button(action: {
+                                        viewModel.kickCrew(memberId: member.id) { success in
+                                            if success {
+                                                crew.removeAll { $0.id == member.id }
+                                            }
+                                        }
+                                    }) {
+                                        Image(systemName: "person.crop.circle.badge.xmark")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(BorderlessButtonStyle())
                                 }
                             }
                         }

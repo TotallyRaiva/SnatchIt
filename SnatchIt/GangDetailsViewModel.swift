@@ -139,4 +139,29 @@ class GangDetailsViewModel: ObservableObject {
             }
         }
     }
+
+    /// Kick member from gang
+    func kickCrew(memberId: String, completion: @escaping (Bool) -> Void) {
+        guard let gangId = gang.id else {
+            completion(false)
+            return
+        }
+
+        let db = Firestore.firestore()
+        let gangRef = db.collection("groups").document(gangId)
+
+        gangRef.updateData([
+            "members": FieldValue.arrayRemove([memberId])
+        ]) { error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.errorMessage = "Error kicking member: \(error.localizedDescription)"
+                    completion(false)
+                } else {
+                    self.successMessage = "Crew member kicked."
+                    completion(true)
+                }
+            }
+        }
+    }
 }
