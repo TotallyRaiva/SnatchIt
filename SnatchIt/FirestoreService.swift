@@ -59,6 +59,21 @@ class FirestoreService: ObservableObject {
             print("Update failed: \(error)")
         }
     }
+    // Remove a user from a gang
+    func removeMember(fromGang gangId: String, userId: String, completion: @escaping (Bool) -> Void) {
+        let groupRef = db.collection("groups").document(gangId)
+        
+        groupRef.updateData([
+            "members": FieldValue.arrayRemove([userId])
+        ]) { error in
+            if let error = error {
+                print("Error removing member: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                completion(true)
+            }
+        }
+    }
 }
 
 // MARK: - Gang Invitation Methods

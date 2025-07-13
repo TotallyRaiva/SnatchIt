@@ -162,6 +162,15 @@ class GangDetailsViewModel: ObservableObject {
                     completion(true)
                 }
             }
+            // Remove gang from user's document
+            let userRef = db.collection("users").document(memberId)
+            userRef.updateData([
+                "gangs": FieldValue.arrayRemove([gangId])
+            ]) { error in
+                if let error = error {
+                    print("Warning: Could not update user gang list: \(error.localizedDescription)")
+                }
+            }
         }
     }
 }

@@ -73,11 +73,7 @@ struct GangDetailsView: View {
                                 } else if isBoss {
                                     Spacer()
                                     Button(action: {
-                                        viewModel.kickCrew(memberId: member.id) { success in
-                                            if success {
-                                                crew.removeAll { $0.id == member.id }
-                                            }
-                                        }
+                                        viewModel.confirmKickMember = member
                                     }) {
                                         Image(systemName: "person.crop.circle.badge.xmark")
                                             .foregroundColor(.red)
@@ -89,6 +85,20 @@ struct GangDetailsView: View {
                     }
                 } header: {
                     Text("Crew")
+                }
+                .alert(item: $viewModel.confirmKickMember) { member in
+                    Alert(
+                        title: Text("Kick \(member.nickname)?"),
+                        message: Text("Are you sure you want to remove this member from the gang?"),
+                        primaryButton: .destructive(Text("Kick")) {
+                            viewModel.kickCrew(memberId: member.id) { success in
+                                if success {
+                                    crew.removeAll { $0.id == member.id }
+                                }
+                            }
+                        },
+                        secondaryButton: .cancel()
+                    )
                 }
                 
                 // Section for displaying loot or group expenses (currently placeholder)
@@ -117,7 +127,6 @@ struct GangDetailsView: View {
                         }
                         .padding(.vertical, 4)
 
-                        Button("Kick from Gang") { /* Kick flow */ }
                         Button("Rename Gang") { /* Edit flow */ }
                         Button("Bust Up Gang") { /* Delete gang */ }
                             .foregroundColor(.red)
