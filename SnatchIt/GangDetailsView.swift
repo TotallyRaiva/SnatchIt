@@ -8,14 +8,6 @@ import SwiftUI
 import FirebaseFirestore
 import Combine
 
-/// Model representing a crew member's profile for display.
-struct CrewMemberProfile: Identifiable {
-    let id: String
-    let nickname: String
-    let avatar: String?
-    let isBoss: Bool
-}
-
 /// View displaying detailed information about a gang, including crew members, loot, and management options.
 struct GangDetailsView: View {
     let gang: SharedGroup
@@ -29,117 +21,20 @@ struct GangDetailsView: View {
     // Controls display of the recruit crew sheet
     @State private var showRecruitSheet = false
     
-    init(gang: SharedGroup, isBoss: Bool, viewModel: GangDetailsViewModel) {
+    init(gang: SharedGroup, isBoss: Bool) {
         self.gang = gang
         self.isBoss = isBoss
-        _viewModel = StateObject(wrappedValue: viewModel)
+        self._viewModel = StateObject(wrappedValue: GangDetailsViewModel(gang: gang))
     }
     
     var body: some View {
         NavigationView {
             List {
-                // Section displaying boss information and gang metadata
-                Section {
-                    HStack {
-                        Text("Gang Boss:")
-                        Text(bossProfile?.nickname ?? "Unknown") // Use bossProfile nickname or Unknown
-                            .fontWeight(.bold)
-                    }
-                    HStack {
-                        Text("Gang Name:")
-                        Text(gang.name)
-                    }
-                    HStack {
-                        Text("Description:")
-                        Text("-")
-                    }
-                } header: {
-                    Text("Boss Panel")
-                }
-                
-                // Section listing all crew members with indication of boss
-                Section {
-                    if crew.isEmpty {
-                        Text("No crew members")
-                    } else {
-                        ForEach(crew) { member in
-                            HStack {
-                                Image(systemName: member.avatar ?? "person.fill")
-                                Text(member.nickname)
-                                if member.isBoss {
-                                    Text("Boss")
-                                        .font(.caption)
-                                        .foregroundColor(.accentColor)
-                                } else if isBoss {
-                                    Spacer()
-                                    Button(action: {
-                                        viewModel.confirmKickMember = member
-                                    }) {
-                                        Image(systemName: "person.crop.circle.badge.xmark")
-                                            .foregroundColor(.red)
-                                    }
-                                    .buttonStyle(BorderlessButtonStyle())
-                                }
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Crew")
-                }
-                .alert(item: $viewModel.confirmKickMember) { member in
-                    Alert(
-                        title: Text("Kick \(member.nickname)?"),
-                        message: Text("Are you sure you want to remove this member from the gang?"),
-                        primaryButton: .destructive(Text("Kick")) {
-                            viewModel.kickCrew(memberId: member.id) { success in
-                                if success {
-                                    crew.removeAll { $0.id == member.id }
-                                }
-                            }
-                        },
-                        secondaryButton: .cancel()
-                    )
-                }
-                
-                // Section for displaying loot or group expenses (currently placeholder)
-                Section {
-                    // Show group expenses here!
-                    Text("No loot yet!") // Placeholder
-                } header: {
-                    Text("Loot Log")
-                }
-                
-                // Section with management actions available only to the boss
-                if isBoss {
-                    Section {
-                        VStack(alignment: .leading) {
-                            Text("Invite by Email or UID").font(.caption)
-                            TextField("example@email.com or UID", text: Binding(
-                                get: { viewModel.inviteInput },
-                                set: { viewModel.inviteInput = $0 }
-                            ))
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            Button("Send Invite") {
-                                viewModel.recruitCrew(invitee: viewModel.inviteInput) { success in
-                                    viewModel.inviteInput = ""
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-
-                        Button("Rename Gang") { /* Edit flow */ }
-                        Button("Bust Up Gang") { /* Delete gang */ }
-                            .foregroundColor(.red)
-                    } header: {
-                        Text("Recruit or Kick Crew")
-                    }
-                }
-                
-                // Section for leaving the gang, available to all members
-                Section {
-                    Button("Drop Out") { /* Leave gang flow */ }
-                        .foregroundColor(.red)
-                }
+                bossSection
+                crewSection
+                lootSection
+                managementSection
+                leaveSection
             }
             .navigationTitle("Gang: \(gang.name)")
             // Alert to show error or success messages from ViewModel
@@ -158,54 +53,159 @@ struct GangDetailsView: View {
             }
             // Fetch crew and boss profiles when view appears
             .onAppear {
-                let db = Firestore.firestore()
-                var fetchedCrew: [CrewMemberProfile] = []
-                let bossId = gang.bosses.first
+                fetchCrewMembers()
+            }
+        }
+    }
+    
+    /// Fetch crew members from Firestore and update the UI
+    private func fetchCrewMembers() {
+        let db = Firestore.firestore()
+        let bossIds = Set(gang.bosses)
+        
+        // Combine all member IDs (bosses and regular members)
+        let allMemberIds = Set(gang.bosses + gang.members)
+        
+        // Fetch all members at once
+        for memberId in allMemberIds {
+            db.collection("users").document(memberId).getDocument { snapshot, error in
+                guard let data = snapshot?.data(), error == nil else { return }
                 
-                // Fetch bosses (Boss is first)
-                for bossId in gang.bosses {
-                    db.collection("users").document(bossId).getDocument { snapshot, error in
-                        // Ensure document data exists and no error occurred
-                        guard let data = snapshot?.data(), error == nil else { return }
-                        let nickname = data["nickname"] as? String ?? "Unknown"
-                        let avatar = data["avatar"] as? String
-                        let profile = CrewMemberProfile(id: bossId, nickname: nickname, avatar: avatar, isBoss: true)
-                        DispatchQueue.main.async {
-                            // Update bossProfile state with fetched boss data
-                            bossProfile = profile
-                            // Append to crew list if not already included
-                            if !fetchedCrew.contains(where: { $0.id == profile.id }) {
-                                fetchedCrew.append(profile)
-                                crew = fetchedCrew
-                            }
-                        }
+                let nickname = data["nickname"] as? String ?? "Unknown"
+                let avatar = data["avatar"] as? String
+                let isBoss = bossIds.contains(memberId)
+                
+                let profile = CrewMemberProfile(
+                    id: memberId,
+                    nickname: nickname,
+                    avatar: avatar,
+                    isBoss: isBoss
+                )
+                
+                DispatchQueue.main.async {
+                    // Update boss profile if this is a boss
+                    if isBoss && bossProfile == nil {
+                        bossProfile = profile
+                    }
+                    
+                    // Add to crew list if not already present
+                    if !crew.contains(where: { $0.id == profile.id }) {
+                        crew.append(profile)
                     }
                 }
-                
-                // Fetch regular crew members
-                for memberId in gang.members {
-                    db.collection("users").document(memberId).getDocument { snapshot, error in
-                        // Ensure document data exists and no error occurred
-                        guard let data = snapshot?.data(), error == nil else { return }
-                        let nickname = data["nickname"] as? String ?? "Unknown"
-                        let avatar = data["avatar"] as? String
-                        // Determine if this member is also a boss
-                        let isBoss = memberId == bossId
-                        let profile = CrewMemberProfile(id: memberId, nickname: nickname, avatar: avatar, isBoss: isBoss)
-                        DispatchQueue.main.async {
-                            // Update bossProfile if this member is boss
-                            if isBoss {
-                                bossProfile = profile
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var bossSection: some View {
+        Section {
+            HStack {
+                Text("Gang Boss:")
+                Text(bossProfile?.nickname ?? "Unknown")
+                    .fontWeight(.bold)
+            }
+            HStack {
+                Text("Gang Name:")
+                Text(gang.name)
+            }
+            HStack {
+                Text("Description:")
+                Text("-")
+            }
+        } header: {
+            Text("Boss Panel")
+        }
+    }
+    
+    @ViewBuilder
+    private var crewSection: some View {
+        Section {
+            if crew.isEmpty {
+                Text("No crew members")
+            } else {
+                ForEach(crew) { member in
+                    HStack {
+                        Image(systemName: member.avatar ?? "person.fill")
+                        Text(member.nickname)
+                        if member.isBoss {
+                            Text("Boss")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                        } else if isBoss {
+                            Spacer()
+                            Button(action: {
+                                viewModel.confirmKickMember = member
+                            }) {
+                                Image(systemName: "person.crop.circle.badge.xmark")
+                                    .foregroundColor(.red)
                             }
-                            // Append to crew list if not already included
-                            if !fetchedCrew.contains(where: { $0.id == profile.id }) {
-                                fetchedCrew.append(profile)
-                                crew = fetchedCrew
-                            }
+                            .buttonStyle(BorderlessButtonStyle())
                         }
                     }
                 }
             }
+        } header: {
+            Text("Crew")
+        }
+        .alert(item: Binding<CrewMemberProfile?>(
+            get: { viewModel.confirmKickMember },
+            set: { viewModel.confirmKickMember = $0 }
+        )) { member in
+            Alert(
+                title: Text("Kick \(member.nickname)?"),
+                message: Text("Are you sure you want to remove this member from the gang?"),
+                primaryButton: .destructive(Text("Kick")) {
+                    viewModel.kickCrew(memberId: member.id) { success in
+                        if success {
+                            crew.removeAll { $0.id == member.id }
+                        }
+                    }
+                },
+                secondaryButton: .cancel()
+            )
+        }
+    }
+    
+    @ViewBuilder
+    private var lootSection: some View {
+        Section {
+            Text("No loot yet!") // Placeholder
+        } header: {
+            Text("Loot Log")
+        }
+    }
+    
+    @ViewBuilder
+    private var managementSection: some View {
+        if isBoss {
+            Section {
+                VStack(alignment: .leading) {
+                    Text("Invite by Email or UID").font(.caption)
+                    TextField("example@email.com or UID", text: $viewModel.inviteInput)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    Button("Send Invite") {
+                        viewModel.recruitCrew(invitee: viewModel.inviteInput) { success in
+                            viewModel.inviteInput = ""
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+
+                Button("Rename Gang") { /* Edit flow */ }
+                Button("Bust Up Gang") { /* Delete gang */ }
+                    .foregroundColor(.red)
+            } header: {
+                Text("Recruit or Kick Crew")
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var leaveSection: some View {
+        Section {
+            Button("Drop Out") { /* Leave gang flow */ }
+                .foregroundColor(.red)
         }
     }
 }
@@ -219,10 +219,8 @@ struct GangDetailsView: View {
         inviteCode: nil,
         createdAt: Date()
     )
-    let viewModel = GangDetailsViewModel(gang: gang)
     GangDetailsView(
         gang: gang,
-        isBoss: true,
-        viewModel: viewModel
+        isBoss: true
     )
 }

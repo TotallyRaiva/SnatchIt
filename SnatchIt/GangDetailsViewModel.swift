@@ -7,10 +7,19 @@
 import Foundation
 import FirebaseFirestore
 
+/// Model representing a crew member's profile for display.
+struct CrewMemberProfile: Identifiable {
+    let id: String
+    let nickname: String
+    let avatar: String?
+    let isBoss: Bool
+}
+
 class GangDetailsViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var successMessage: String? = nil
     @Published var inviteInput: String = ""
+    @Published var confirmKickMember: CrewMemberProfile? = nil
 
     let gang: SharedGroup
 

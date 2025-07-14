@@ -18,7 +18,18 @@ struct GangsView: View {
     var body: some View {
         NavigationView {
             List(viewModel.userGangs) { gang in
-                Text(gang.name)
+                NavigationLink(destination: GangDetailsView(
+                    gang: gang,
+                    isBoss: gang.bosses.contains(currentUserId)
+                )) {
+                    VStack(alignment: .leading) {
+                        Text(gang.name)
+                            .font(.headline)
+                        Text("Boss: \(gang.bosses.first ?? "Unknown")")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
             .navigationTitle("Your Gangs")
             .toolbar {
