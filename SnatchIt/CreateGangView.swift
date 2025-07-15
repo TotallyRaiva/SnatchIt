@@ -83,10 +83,14 @@ extension CreateGangView {
                 print("Error creating gang: \(error.localizedDescription)")
                 return
             }
-            
-            // Create SharedGroup instance with the document ID and data
+
+            guard let gangId = docRef.documentID as String? else {
+                print("Error: Failed to get gang document ID")
+                return
+            }
+
             let newGroup = SharedGroup(
-                id: docRef.documentID,
+                id: gangId,
                 name: gangName,
                 description: gangDescription,
                 avatar: avatar,
@@ -96,10 +100,10 @@ extension CreateGangView {
                 pendingInvites: [],
                 createdAt: Date()
             )
-            
+
             // Call the completion handler
             onComplete?(newGroup)
-            
+
             // Dismiss the view
             dismiss()
         })

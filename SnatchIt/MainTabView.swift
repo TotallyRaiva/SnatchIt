@@ -28,7 +28,7 @@ struct MainTabView: View {
                         Label("Charts", systemImage: "chart.bar")
                     }
 
-                GangsView()
+                GangsView(userId: authService.user?.id ?? "", firestoreService: firestoreService)
                     .tag(2)
                     .tabItem {
                         Label("Gangs", systemImage: "person.3.sequence.fill")

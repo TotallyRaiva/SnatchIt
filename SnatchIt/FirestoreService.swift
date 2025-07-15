@@ -55,10 +55,68 @@ class FirestoreService: ObservableObject {
                   .collection("expenses")
                   .document(docID)
                   .setData(from: expense, merge: true)
-        } catch {
+        }
+        catch {
             print("Update failed: \(error)")
         }
     }
+    // Fetch all gangs for a given user (either as a member or with pending invites)
+    func fetchUserGangs(for userId: String, completion: @escaping ([SharedGroup]) -> Void) {
+        let groupsRef = db.collection("groups")
+        
+        groupsRef.whereField("members", arrayContains: userId)
+            .getDocuments { memberSnapshot, memberError in
+                let memberGroups = memberSnapshot?.documents.compactMap {
+                    try? $0.data(as: SharedGroup.self)
+                } ?? []
+                
+                groupsRef.whereField("pendingInvites", arrayContains: userId)
+                    .getDocuments { inviteSnapshot, inviteError in
+                        let inviteGroups = inviteSnapshot?.documents.compactMap {
+                            try? $0.data(as: SharedGroup.self)
+                        } ?? []
+                        
+                        let combinedGroups = memberGroups + inviteGroups
+                        DispatchQueue.main.async {
+                            completion(combinedGroups)
+                        }
+                    }
+            }
+    }
+
+    // Create a new gang and link it to the creator
+    func createGang(_ gang: SharedGroup, creatorUserId: String, completion: @escaping (Bool) -> Void) {
+        guard let gangId = gang.id else {
+            print("Error: gang.id is nil")
+            completion(false)
+            return
+        }
+        let gangRef = db.collection("groups").document(gangId)
+
+        gangRef.setData([
+            "name": gang.name,
+            "bosses": gang.bosses,
+            "members": gang.members,
+            "createdAt": FieldValue.serverTimestamp()
+        ]) { error in
+            if let error = error {
+                print("Error creating gang: \(error.localizedDescription)")
+                completion(false)
+                return
+            }
+
+            let userRef = self.db.collection("users").document(creatorUserId)
+            userRef.updateData([
+                "gangs": FieldValue.arrayUnion([gangId])
+            ]) { userError in
+                if let userError = userError {
+                    print("Error updating user with new gang: \(userError.localizedDescription)")
+                }
+                completion(userError == nil)
+            }
+        }
+    }
+
     // Remove a user from a gang
     func removeMember(fromGang gangId: String, userId: String, completion: @escaping (Bool) -> Void) {
         let groupRef = db.collection("groups").document(gangId)
