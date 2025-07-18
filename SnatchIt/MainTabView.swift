@@ -76,7 +76,9 @@ struct MainTabView: View {
     }
 }
 
-#Preview {
-    MainTabView(authService: AuthService())
-        .environmentObject(FirestoreService())
+struct MainTabView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainTabView(authService: AuthService())
+            .environmentObject(FirestoreService())
+    }
 }

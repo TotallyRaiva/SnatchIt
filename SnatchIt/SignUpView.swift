@@ -48,41 +48,30 @@ struct SignUpView: View {
             }
             
             Button(action: {
-                authService.signUp(email: email, password: password) { result in
+                authService.signUp(email: email, password: password, nickname: nickname) { result in
                     switch result {
                         case .success(()):
-                            // Save nickname & email to Firestore
-                            if let user = Auth.auth().currentUser {
-                                let db = Firestore.firestore()
-                                db.collection("users").document(user.uid).setData([
-                                    "email": email,
-                                    "nickname": nickname
-                                ]) { error in
-                                    if let error = error {
-                                        print("Error saving user data: \(error.localizedDescription)")
-                                    } else {
-                                        print("User profile saved in Firestore!")
-                                    }
-                                }
-                            }
+                            print("Sign up successful!")
                         case .failure(let error):
                             self.errorMessage = error.localizedDescription
                     }
                 }
             }) {
                 Text("Sign Up")
-                    .bold( )
+                    .bold()
                     .frame(maxWidth: .infinity)
-                    .padding( )
+                    .padding()
                     .background(Color.green)
                     .foregroundColor(.white)
                     .cornerRadius(8)
             }
-            }
-        .padding( )
         }
+        .padding()
     }
+}
 
-#Preview {
-    SignUpView(authService: AuthService())
+struct SignUpView_Previews: PreviewProvider {
+    static var previews: some View {
+        SignUpView(authService: AuthService())
+    }
 }

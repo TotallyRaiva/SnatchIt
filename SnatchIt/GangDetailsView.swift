@@ -27,6 +27,14 @@ struct GangDetailsView: View {
         self._viewModel = StateObject(wrappedValue: GangDetailsViewModel(gang: gang))
     }
     
+    // Temporary initializer for backward compatibility
+    init(gang: SharedGroup, isBoss: Bool, currentUserId: String) {
+        self.gang = gang
+        self.isBoss = isBoss
+        self._viewModel = StateObject(wrappedValue: GangDetailsViewModel(gang: gang))
+        // currentUserId is ignored for now
+    }
+    
     var body: some View {
         NavigationView {
             List {

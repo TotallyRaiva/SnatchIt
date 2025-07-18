@@ -20,6 +20,11 @@ struct CreateGangView: View {
     // Current user's ID
     let userId: String
     
+    init(onComplete: ((SharedGroup) -> Void)? = nil, userId: String) {
+        self.onComplete = onComplete
+        self.userId = userId
+    }
+    
     var body: some View {
         NavigationView {
             Form {

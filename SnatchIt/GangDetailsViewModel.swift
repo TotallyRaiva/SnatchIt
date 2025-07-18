@@ -20,13 +20,13 @@ class GangDetailsViewModel: ObservableObject {
     @Published var successMessage: String? = nil
     @Published var inviteInput: String = ""
     @Published var confirmKickMember: CrewMemberProfile? = nil
-
+    
     let gang: SharedGroup
-
+    
     init(gang: SharedGroup) {
         self.gang = gang
     }
-
+    
     /// Invite a user by email or UID. Handles Firestore update.
     func recruitCrew(invitee: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
@@ -58,7 +58,7 @@ class GangDetailsViewModel: ObservableObject {
             self.sendGangInvite(uid: invitee, completion: completion)
         }
     }
-
+    
     /// Adds the user UID to pendingInvites array of the group and gangInvites in the user doc.
     private func sendGangInvite(uid: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
@@ -89,24 +89,24 @@ class GangDetailsViewModel: ObservableObject {
             }
         }
     }
-
+    
     /// Accept a pending invite for a user
     func acceptInvite(forUserId userId: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
         let groupId = gang.id ?? ""
         let groupRef = db.collection("groups").document(groupId)
         let userRef = db.collection("users").document(userId)
-
+        
         let batch = db.batch()
         batch.updateData([
             "members": FieldValue.arrayUnion([userId]),
             "pendingInvites": FieldValue.arrayRemove([userId])
         ], forDocument: groupRef)
-
+        
         batch.updateData([
             "gangInvites": FieldValue.arrayRemove([groupId])
         ], forDocument: userRef)
-
+        
         batch.commit { error in
             DispatchQueue.main.async {
                 if let error = error {
@@ -119,23 +119,23 @@ class GangDetailsViewModel: ObservableObject {
             }
         }
     }
-
+    
     /// Decline a pending invite for a user
     func declineInvite(forUserId userId: String, completion: @escaping (Bool) -> Void) {
         let db = Firestore.firestore()
         let groupId = gang.id ?? ""
         let groupRef = db.collection("groups").document(groupId)
         let userRef = db.collection("users").document(userId)
-
+        
         let batch = db.batch()
         batch.updateData([
             "pendingInvites": FieldValue.arrayRemove([userId])
         ], forDocument: groupRef)
-
+        
         batch.updateData([
             "gangInvites": FieldValue.arrayRemove([groupId])
         ], forDocument: userRef)
-
+        
         batch.commit { error in
             DispatchQueue.main.async {
                 if let error = error {
@@ -148,17 +148,17 @@ class GangDetailsViewModel: ObservableObject {
             }
         }
     }
-
+    
     /// Kick member from gang
     func kickCrew(memberId: String, completion: @escaping (Bool) -> Void) {
         guard let gangId = gang.id else {
             completion(false)
             return
         }
-
+        
         let db = Firestore.firestore()
         let gangRef = db.collection("groups").document(gangId)
-
+        
         gangRef.updateData([
             "members": FieldValue.arrayRemove([memberId])
         ]) { error in
@@ -182,4 +182,5 @@ class GangDetailsViewModel: ObservableObject {
             }
         }
     }
+    
 }

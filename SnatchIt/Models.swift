@@ -54,16 +54,28 @@ struct User: Identifiable, Codable {
 // Holds the gang's info including optional description and avatar, membership, Boss lists, and pending invites.
 // Only UIDs are stored for members, Bosses (admins), and pendingInvites.
 // Nicknames and avatars should be fetched dynamically from the users collection using UIDs in the view/viewmodel.
-struct SharedGroup: Identifiable, Codable {
-    @DocumentID var id: String?         // Unique Firestore document ID
-    var name: String                    // Gang display name
-    var description: String?            // Optional gang description
-    var avatar: String?                 // Optional avatar/icon
-    var members: [String]               // UIDs of all gang members
-    var bosses: [String]                // UIDs of gang Bosses (admins/owners)
-    var inviteCode: String?             // Optional: code for easy joining
-    var pendingInvites: [String]?       // Optional pending invites
-    var createdAt: Date                 // Timestamp of gang creation
+public struct SharedGroup: Identifiable, Codable {
+    @DocumentID public var id: String?         // Unique Firestore document ID
+    public var name: String                    // Gang display name
+    public var description: String?            // Optional gang description
+    public var avatar: String?                 // Optional avatar/icon
+    public var members: [String]               // UIDs of all gang members
+    public var bosses: [String]                // UIDs of gang Bosses (admins/owners)
+    public var inviteCode: String?             // Optional: code for easy joining
+    public var pendingInvites: [String]?       // Optional pending invites
+    public var createdAt: Date                 // Timestamp of gang creation
+
+    public init(id: String? = nil, name: String, description: String? = nil, avatar: String? = nil, members: [String], bosses: [String], inviteCode: String? = nil, pendingInvites: [String]? = nil, createdAt: Date) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.avatar = avatar
+        self.members = members
+        self.bosses = bosses
+        self.inviteCode = inviteCode
+        self.pendingInvites = pendingInvites
+        self.createdAt = createdAt
+    }
 
     // MARK: - Helper Methods (stubs to be implemented in ViewModel/Service)
     // Use these in a ViewModel/Service to connect to Firestore.

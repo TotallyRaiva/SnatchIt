@@ -7,10 +7,11 @@
 import Foundation
 import FirebaseFirestore
 
-class FirestoreService: ObservableObject {
+open class FirestoreService: ObservableObject {
     private let db = Firestore.firestore()
 
     @Published var expenses: [Expense] = []
+    @Published internal var userNicknames: [String: String] = [:]
 
     func addExpense(_ expense: Expense, forUser userID: String) {
         print("Adding expense for userID:", userID)
@@ -129,6 +130,26 @@ class FirestoreService: ObservableObject {
                 completion(false)
             } else {
                 completion(true)
+            }
+        }
+    }
+    
+    // Fetch nicknames for a list of user IDs
+    func fetchNicknames(for userIds: [String]) {
+        for userId in userIds {
+            // Skip if we already have the nickname
+            if userNicknames[userId] != nil {
+                continue
+            }
+            
+            db.collection("users").document(userId).getDocument { snapshot, error in
+                guard let data = snapshot?.data(), error == nil else { return }
+                
+                if let nickname = data["nickname"] as? String {
+                    DispatchQueue.main.async {
+                        self.userNicknames[userId] = nickname
+                    }
+                }
             }
         }
     }

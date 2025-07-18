@@ -125,7 +125,8 @@ struct DashboardView: View {
         }
     }
 }
-    #Preview {
-        DashboardView(authService: AuthService())
-            .environmentObject(FirestoreService())
-    }
+
+#Preview {
+    DashboardView(authService: AuthService())
+        .environmentObject(FirestoreService())
+}

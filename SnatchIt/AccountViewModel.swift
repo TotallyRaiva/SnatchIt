@@ -22,9 +22,11 @@ class AccountViewModel: ObservableObject {
         let db = Firestore.firestore()
         db.collection("users").document(user.uid).getDocument { snapshot, error in
             if let data = snapshot?.data() {
-                self.nickname = data["nickname"] as? String ?? ""
-                self.email = data["email"] as? String ?? user.email ?? ""
-                self.selectedAvatar = data["avatar"] as? String ?? "person.circle.fill"
+                DispatchQueue.main.async {
+                    self.nickname = data["nickname"] as? String ?? ""
+                    self.email = data["email"] as? String ?? user.email ?? ""
+                    self.selectedAvatar = data["avatar"] as? String ?? "person.circle.fill"
+                }
             }
         }
     }
